@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Assuming your vault servers are named like this!
+export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+
+  # Quickly read a vault secret, kv or totp and put it in the clipboard. Simple.
+  # Make sure to include the Key to read out for your kv secret.
+function readVaultClipboard {
+  if [[ "$1" == *"totp"* ]]
+  then
+    jqpattern='.data.code'
+    vaultargs='read'
+  else
+    [ -z "$2" ] && { echo "Need a second argument for which Key to read of secret" ; return 1 ;}
+    jqpattern=".data.data.$2"
+    vaultargs='kv get'
+  fi
+  vaultResult="$(vault $vaultargs -format json $1)"
+  vaultExitCode=$?
+
+  if [ $vaultExitCode -eq 0 ]
+  then
+    jq -r "$jqpattern" <<< "${vaultResult}" | tr -d '\n' | xclip -sel clip
+    echo "OK"
+  else
+    echo "ERR"
+  fi
+}
+
+# readVaultClipboard kv/gmail email
+# readVaultClipboard kv/gmail password
+
+# readVaultClipboard totp/code/google

@@ -1,0 +1,110 @@
+#!/bin/bash
+# Generalily helpful functions, non-specific
+
+  # New one line I've put together Dec 5 2022
+  # Running this lets you drag-select an area on the screen with your cursor and once you let go, feeds a screenshot into tesseract.
+  # Tesseract then pipes the text it sees into your clipboard.
+function selectionToClipboard {
+  # Take a user mouse x,y selection and run tesseract over it, put the resulting text in the clipboard
+  [ -z "$DISPLAY" ] && { echo "No display" ; return 1;}
+  import PNG:- | tesseract - - 2>/dev/null | xclip -sel clip
+}; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboard
+
+
+
+  # Make ascii art quickly
+function quickFiglet {
+  sed 's/^/#/g' <(figlet "$@")
+}; alias figletQuick=quickFiglet
+
+  # Connect to and print a remote's certificate. Very useful for me. Takes optional :port if not 443.
+function getCert {
+  [ -z "$1" ] && { >&2 echo -e "Usage: getCert host:port\n\tGets cert info of remote.\n\tLeave port (:) out to assume 443"; return 1 ;}
+  host=$1
+  [[ $host != *":"* ]] && host+=:443
+  echo | openssl s_client -connect $host 2>/dev/null | openssl x509 -noout -dates -subject -issuer -ext subjectAltName
+}
+
+  # Also very useful, especially for safely reading a Vault secret then autotyping the output into a prompt
+  # Takes an argument or can have text piped into it
+function typeText {
+  if [ -t 0 ] ; then
+    sleep 2
+    >&2 echo "Reading from args..."
+    xmacroplay <<< "String $@"
+  else
+    sleep 2
+    >&2 echo "Reading from pipe..."
+    input="$(cat)"
+    xmacroplay <<< "String ${input}"
+  fi
+}
+
+# I remember using these for calculating hourly SAAS costs on the fly.
+function Hourly_to_Yearly {
+  echo $1*24*365 | bc
+}
+function Hourly_to_Monthly {
+  echo $1*24*30 | bc
+}
+
+ # Extremely helpful working with Saltstack all the time (Yaml moment)
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}; alias yaml_parse=parse_yaml
+
+  # Takes file or files as arguments and outputs a single deduplicated text stream, without ruining the order.
+  # No duplicate lines but order not ruined.
+function grepUniqOrdered {
+  [ -n "$1" ] || { >&2 echo -e "Need at least one file as argument.\nRemoves duplicate lines from file but keeps order" ; return 1 ;}
+  awk -F '\n' '!a[$1 FS $2]++' ${@} # Ignore any duplicate lines while reading out all provided files.
+}; alias dedupe=grepUniqOrdered dedup=grepUniqOrdered
+
+# Useful for restoring truncated bash history from backups/zfs snapshots using a line like:
+# 'HISTFILE=/dev/null ; dedup /home/.zfs/snapshot/*/$USER/.bash_history > .bash_history'
+
+  # As it says, useful to set the Title card of a terminal emulator, takes one argument which can be a quoted string
+function setTerminalTitle { PROMPT_COMMAND="echo -ne \"\033]0;$1 (on $HOSTNAME)\007\"" ; }; alias title=setTerminalTitle
+
+  # Quickly convert between the Cisco MAC Address format used by their devices or other brands mimicking them on the fly.
+  # You can pipe a MAC in or just paste it as the argumnet and the function will spit out the opposite format.
+  # aabb.cc11.2233 <> aa:bb:cc:11:22:33
+function ciscoConvert {
+  if [ -n "$1" ]; then input=$1; else input="`cat /dev/stdin`" ; fi
+
+  if [[  "$input" == *"."* ]]
+  then
+    echo $input | tr -d '.' | fold -w2 - | tr '\n' ':' | sed 's/\:$//g' | tr '[:upper:]' '[:lower:]' ; echo
+  elif [[  "$input" == *":"* ]]
+  then
+    echo $input | tr -d ':' | fold -w4 - | tr '\n' '.' | sed 's/\.$//g' | tr '[:lower:]' '[:upper:]' ; echo
+  else
+    echo "Not sure what I'm looking at sorry."
+  fi
+}
+
+# Start glava but use xrandr to determine X session size so it spans the entire screen regardless of what display you're using.
+function toggleGlava {
+  # Start glava and auto-set the resolution on startup.
+  if pgrep glava >/dev/null 2>&1
+  then pkill glava
+  else
+    currentRes=$(awk -v FS=' ' '{print $8 " " $10 + 0}' <<<$(xrandr| head -n1))
+    sudo sed -i -e "s/#request setgeometry.*/#request setgeometry -10 0 ${currentRes}/g" /etc/xdg/glava/rc.glsl
+    glava -d >/dev/null 2>&1 &
+  fi
+}
+
