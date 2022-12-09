@@ -1,0 +1,16 @@
+#!/bin/bash
+
+  # SSH to a remote using tcpdump args, open local wireshark to view capture
+function wiresharkSsh {
+  function printHelp {
+    echo "Need a ssh remote as argument 1 and tcpdump args for that host as argument 2"
+    echo "e.g. ${FUNCNAME[1]} root@remote -i enp6s0 port 443" ;}
+  [[ -z "$1" || -z "$2" ]] && printHelp
+  rhost=$1
+  tcpdumpArgs=$2
+
+  if [[ "$rhost" != *"root@"* ]]; then rhostTcpdumpPrefix="sudo" ; echo "If your sudoers requires a password prompt to use tcpdump this may fail"; fi
+  if ! grep -q 'wireshark' <(groups) ; then wiresharkPrefix="sudo" ; fi
+
+  ssh ${rhost} tcpdump -U -s0 -w - ${tcpdumpArgs} | $wiresharkPrefix wireshark -k -i - 2>/dev/null
+}
