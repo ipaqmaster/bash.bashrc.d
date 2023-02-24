@@ -4,13 +4,29 @@
   # New one line I've put together Dec 5 2022
   # Running this lets you drag-select an area on the screen with your cursor and once you let go, feeds a screenshot into tesseract.
   # Tesseract then pipes the text it sees into your clipboard.
+
 function selectionToClipboard {
-  # Take a user mouse x,y selection and run tesseract over it, put the resulting text in the clipboard
+  # Take x,y screenshot from display. Read QR otherwise use tesseract for text string. Put result into clipboard.
   [ -z "$DISPLAY" ] && { echo "No display" ; return 1;}
-  import PNG:- | tesseract - - 2>/dev/null | xclip -sel clip
+  screenshotData=$(import PNG:- | base64)
+    qrResult=$(base64 -d <<< ${screenshotData} | zbarimg - 2>/dev/null)
+  textResult=$(base64 -d <<< ${screenshotData} | tesseract - - 2>/dev/null)
+  if [ -n "$qrResult" ]
+  then
+    echo "QR seen, put in clipboard"
+    xclip -sel clip <<< "${qrResult}"
+    return 0
+  elif [ -n "$textResult" ]
+  then
+    echo "Text seen, put in clipboard"
+    xclip -sel clip <<< "${textResult}"
+    return 0
+  else
+    return 1
+  fi
+
+  xclip -sel clip <<< "${result}"
 }; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboard
-
-
 
   # Make ascii art quickly
 function quickFiglet {
