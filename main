@@ -1,0 +1,14 @@
+#!/bin/bash
+# Can be sourced or . sourced to load all functions automatically.
+scriptRoot=$(dirname $0)
+
+# Check for debug logging
+[[ "$(tr '[:lower:]' '[:upper:]' <<< $@)" =~ ^(DEBUG|VERBOSE)$ ]] && { echo "Debugging enabled..." ; DEBUG=1 ;}
+
+for function in ${scriptRoot}/functions/*
+do
+  name=$(basename $function)
+  source $function && [ -n "$DEBUG" ] && echo "Loaded ${name}"
+done
+
+unset DEBUG name scriptRoot

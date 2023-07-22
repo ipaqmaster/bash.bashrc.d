@@ -1,0 +1,15 @@
+#!/bin/bash
+
+function ciscoConvert {
+  if [ -n "$1" ]; then input=$1; else input="`cat /dev/stdin`" ; fi
+
+  if [[  "$input" == *"."* ]]
+  then
+    echo $input | tr -d '.' | fold -w2 - | tr '\n' ':' | sed 's/\:$//g' | tr '[:upper:]' '[:lower:]' ; echo
+  elif [[  "$input" == *":"* ]]
+  then
+    echo $input | tr -d ':' | fold -w4 - | tr '\n' '.' | sed 's/\.$//g' | tr '[:lower:]' '[:upper:]' ; echo
+  else
+    echo "Not sure what I'm looking at sorry."
+  fi
+}

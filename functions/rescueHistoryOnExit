@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# A trap function designed to avoid bash history truncation often experienced during multi-shell activities
+function rescueHistoryOnExit {
+  terminalHistLength=$(history |wc -l);
+  diskHistLength=$(wc -l < "$HISTFILE");
+  if [ $terminalHistLength -lt 1000 -a $diskHistLength -gt 1000 ]
+  then
+    echo "This terminal's bash history is behind HISTFILE ($HISTFILE)($terminalHistLength of $diskHistLength total)";
+    echo "Doing a history -a then dev nulling this terminal's HISTFILE variable as it exits.";
+    history -a ; HISTFILE=/dev/null ; export HISTFILE=/dev/null;
+    sleep 1
+  fi;
+}; trap rescueHistoryOnExit EXIT HUP TERM

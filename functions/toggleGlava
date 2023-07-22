@@ -1,0 +1,12 @@
+#!/bin/bash
+
+function toggleGlava {
+  # Start glava and auto-set the resolution on startup.
+  if pgrep glava >/dev/null 2>&1
+  then pkill glava
+  else
+    currentRes=$(awk -v FS=' ' '{print $8 " " $10 + 0}' <<<$(xrandr| head -n1))
+    sed -i -e "s/#request setgeometry.*/#request setgeometry -10 0 ${currentRes}/g" .config/glava/rc.glsl
+    glava -d >/dev/null 2>&1 &
+  fi
+}

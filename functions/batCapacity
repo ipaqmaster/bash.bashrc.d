@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Display a battery status. For PS1 prompts
+function batCapacity {
+  batteryPath=/sys/class/power_supply/BAT0
+  if [ -d "$batteryPath" ]
+  then
+    declare -A fields
+    fields[capacity]='%'
+
+    if [ -f $batteryPath/status ]
+    then
+      case $(</sys/class/power_supply/BAT0/status) in
+        Discharging)
+          echo -ne '⌄'
+          ;;
+        Charging)
+          echo -ne '⌃'
+          ;;
+        'Not charging')
+          echo -ne '~'
+          ;;
+        Charged)
+          echo -ne '✓'
+          ;;
+        *)
+          echo -ne "$(</sys/class/power_supply/BAT0/status)"
+          ;;
+      esac
+    fi
+
+    for field in ${!fields[@]}
+      do cat ${batteryPath}/${field} | tr -d '\n' ; echo -n "${fields[$field]} "
+    done
+  fi
+}

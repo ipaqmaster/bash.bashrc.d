@@ -1,0 +1,7 @@
+#!/bin/bash
+function getCert {
+  [ -z "$1" ] && { >&2 echo -e "Usage: getCert host:port\n\tGets cert info of remote.\n\tLeave port (:) out to assume 443.\n\tAny additional arguments are given to the second openssl-x509 pipe such as -text"; return 1 ;}
+  host=$1
+  [[ $host != *":"* ]] && host+=:443
+  echo | timeout 1 openssl s_client -connect $host 2>/dev/null | openssl x509 -noout -dates -subject -issuer -ext subjectAltName,keyUsage,extendedKeyUsage ${@:2} 2>&1
+}

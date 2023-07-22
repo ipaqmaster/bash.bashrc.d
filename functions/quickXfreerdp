@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# A function to set my usual xfreerdp flags and optional extras.
+function quickXfreerdp {
+  which xfreerdp >/dev/null 2>&1 || { echo "Install xfreerdp!" ; return 1;}
+  unset xfreerdpHost xfreerdpUser
+
+  if [ -z "${1}" ] || [ -z "${2}" ]
+  then
+    echo "Need args. e.g."
+    echo -e "\t-Host remote.host -user me@domain. (Additional args appended to xfreerdp)"
+    return 1
+  fi
+
+  while [ $# -gt 0 ]
+  do
+    case "$(tr '[:upper:]' '[:lower:]'<<<${1})" in
+      -host)
+        xfreerdpHost="/v:${2}"
+        shift
+      ;;
+      -user)
+        xfreerdpUser="/u:${2}"
+        shift
+      ;;
+      *)
+        echo "Unrecognised arg: ${2}"
+        return 1
+      ;;
+    esac
+
+    shift
+
+    [ -n "$xfreerdpHost" ] && [ -n "$xfreerdpUser" ] && break
+  done
+
+
+  xfreerdp $xfreerdpHost $xfreerdpUser /dynamic-resolution /clipboard /bpp:16 /network:lan /async-update /async-input /auto-reconnect /cert-tofu $@
+  unset xfreerdpHost xfreerdpUser
+}; alias xfreerdpQuick=quickXfreerdp

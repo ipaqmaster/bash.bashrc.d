@@ -1,0 +1,2 @@
+#!/bin/bash
+function setTerminalTitle { PROMPT_COMMAND="echo -ne \"\033]0;$1 (on $HOSTNAME)\007\"" ; }; alias title=setTerminalTitle

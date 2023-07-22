@@ -1,0 +1,3 @@
+#!/bin/bash
+function Hourly_to_Yearly  { echo $1*24*365 | bc ;}
+function Hourly_to_Monthly { echo $1*24*30  | bc ;}

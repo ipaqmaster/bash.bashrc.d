@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# One of the more useful ones in here. Uses ImageMagick to take a screenshot using x,y coordinates from the mouse
+# automatically transcribing text with tesseract or resolving QR codes instead when possible.
+
+function selectionToClipboard {
+  # Take x,y screenshot from display. Read QR otherwise use tesseract for text string. Put result into clipboard.
+  [ -z "$DISPLAY" ] && { echo "No display" ; return 1;}
+  screenshotData=$(import PNG:- | base64)
+    qrResult=$(base64 -d <<< ${screenshotData} | zbarimg - 2>/dev/null)
+  textResult=$(base64 -d <<< ${screenshotData} | tesseract - - 2>/dev/null)
+  if [ -n "$qrResult" ]
+  then
+    echo "QR seen, put in clipboard"
+    xclip -sel clip <<< "${qrResult}"
+    return 0
+  elif [ -n "$textResult" ]
+  then
+    echo "Text seen, put in clipboard"
+    xclip -sel clip <<< "${textResult}"
+    return 0
+  else
+    return 1
+  fi
+
+  xclip -sel clip <<< "${result}"
+}; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboard

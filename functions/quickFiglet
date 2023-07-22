@@ -1,0 +1,4 @@
+#!/bin/bash
+
+function quickFiglet { sed 's/^/#/g' <(figlet "$@") ;}
+alias figletQuick=quickFiglet

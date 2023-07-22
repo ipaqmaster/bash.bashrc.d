@@ -1,0 +1,13 @@
+#!/bin/bash
+function typeText {
+  if [ -t 0 ] ; then
+    sleep 2
+    >&2 echo "Reading from args..."
+    xmacroplay <<< "String $@"
+  else
+    sleep 2
+    >&2 echo "Reading from pipe..."
+    input="$(cat)"
+    xmacroplay <<< "String ${input}"
+  fi
+}
