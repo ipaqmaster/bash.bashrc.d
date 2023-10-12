@@ -24,4 +24,4 @@ function selectionToClipboard {
   fi
 
   xclip -sel clip <<< "${result}"
-}; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboard
+}; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboardard=selectionToClipboard
