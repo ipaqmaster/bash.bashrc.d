@@ -9,4 +9,4 @@ function mkRandom {
   fi
   tr -dc A-Za-z0-9 < /dev/urandom | head -c$len
   echo
-}
+}; alias mkrandom=mkRandom
