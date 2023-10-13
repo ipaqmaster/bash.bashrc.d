@@ -1,0 +1,33 @@
+# Some colors for PS1
+# Add +10 to any to make it the background/highlight color
+# Should look into using RGB values or some other table instead for rich color suppport.
+# https://wiki.archlinux.org/title/Color_output_in_console
+declare -A colors
+colors[none]=0
+colors[Black]=30
+colors[Red]=31
+colors[Green]=32
+colors[Yellow]=33
+colors[Blue]=34
+colors[Magenta]=35
+colors[Cyan]=36
+colors[LightGray]=37
+colors[Gray]=90
+colors[LightRed]=91
+colors[LightGreen]=92
+colors[LightYellow]=93
+colors[LightBlue]=94
+colors[LightMagenta]=95
+colors[LightCyan]=96
+colors[White]=97
+
+declare -A modifiers
+modifiers[none]=0
+modifiers[bold]=1
+modifiers[dim]=2
+modifiers[italic]=3
+modifiers[underline]=4
+modifiers[blinking]=5
+modifiers[inverse]=7
+modifiers[hidden]=8
+modifiers[strikethrough]=9
