@@ -1,11 +1,24 @@
 #!/bin/bash
 
-# Assuming your vault servers are named like this!
-export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+# Make assumption of vault server if VAULT_ADDR is unset.
+[ -z "$VAULT_ADDR" ] && export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
 
-  # Quickly read a vault secret, kv or totp and put it in the clipboard. Simple.
-  # Make sure to include the Key to read out for your kv secret.
+  # Read a vault secret and store the result in the clipboard via xclip.
+  # Make sure to include the key to read out for a kv secret.
+
+
+# Examples
+## readVaultClipboard kv/gmail email
+## readVaultClipboard kv/gmail password
+## readVaultClipboard totp/code/google
 function readVaultClipboard {
+
+  function printTokenObscured {
+    # Prints with red text and a red background.
+    echo -e "\t >\e[${colors[Red]};$(((${colors[Red]} + 10)))m${stripResult}\e[${colors[none]}m<"
+    unset stripResult
+  }
+
   if [[ "$1" == *"totp"* ]]
   then
     jqpattern='.data.code'
@@ -20,14 +33,31 @@ function readVaultClipboard {
 
   if [ $vaultExitCode -eq 0 ]
   then
-    jq -r "$jqpattern" <<< "${vaultResult}" | tr -d '\n' | xclip -sel clip
-    echo "OK"
+    stripResult=$(jq -r "$jqpattern" <<< "${vaultResult}" | tr -d '\n')
   else
-    echo "ERR"
+    echo "ERR reading vault!"
+  fi
+
+  if [ -z "$DISPLAY" ]
+  then
+    echo "WARN - DISPLAY variable unset. Printing below:"
+    printTokenObscured
+    return 1
+  elif ! which xclip >/dev/null 2>&1
+  then
+    echo "WARN - Can't find xclip in PATH. Printing below:"
+    printTokenObscured
+    return 1
+  fi
+
+  if xclip -sel clip <<< ${stripResult}
+  then
+    echo "OK - sent to clipboard"
+    unset stripResult
+    return 0
+  else
+    echo "ERR - Something went wrong trying to xclip the result. Printing below:"
+    printTokenObscured
+    return 2
   fi
 }
-
-# readVaultClipboard kv/gmail email
-# readVaultClipboard kv/gmail password
-
-# readVaultClipboard totp/code/google
