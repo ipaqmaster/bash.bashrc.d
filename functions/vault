@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Make assumption of vault server if VAULT_ADDR is unset.
-[ -z "$VAULT_ADDR" ] && export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+# Make assumption of vault server if VAULT_ADDR is unset and domain is set.
+if [ -z "${VAULT_ADDR}" ] && [[ "$(hostnamectl hostname)" == *"."* ]]
+then
+  export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+fi
 
   # Read a vault secret and store the result in the clipboard via xclip.
   # Make sure to include the key to read out for a kv secret.
