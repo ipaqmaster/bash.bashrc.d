@@ -1,2 +1,14 @@
 #!/bin/bash
-function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
+
+function urldecode { # Capable of decoding double-encoded strings.
+  iters=0
+  result="${*}"
+  until [ -n "$result" ] && ! [[ $result =~ %[0-9]{2} ]] || [ $iters -ge 10 ]
+  do
+    : "${result:-${*}//+/ }"             # Noop with a first argument holding the result of replacing plusses with spaces.
+    result="$(echo -e "${_//%/\\x}")"    # Take the last command's last argument and replace %'s with a \x hex escape. Process with echo.
+    ((iters++))
+  done
+
+  echo $result
+}
