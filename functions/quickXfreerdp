@@ -35,6 +35,6 @@ function quickXfreerdp {
   done
 
 
-  xfreerdp $xfreerdpHost $xfreerdpUser /dynamic-resolution /clipboard /bpp:16 /network:lan /async-update /async-input /auto-reconnect /cert-tofu $@
+  xfreerdp $xfreerdpHost $xfreerdpUser /dynamic-resolution /clipboard /bpp:16 /network:lan /async-update /async-input /auto-reconnect /cert:tofu $@
   unset xfreerdpHost xfreerdpUser
 }; alias xfreerdpQuick=quickXfreerdp
