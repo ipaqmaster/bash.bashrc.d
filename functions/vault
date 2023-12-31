@@ -36,7 +36,7 @@ function readVaultClipboard {
 
   if [ $vaultExitCode -eq 0 ]
   then
-    stripResult=$(jq -r "$jqpattern" <<< "${vaultResult}" | tr -d '\n')
+    stripResult=$(jq -jr "$jqpattern" <<< "${vaultResult}")
   else
     echo "ERR reading vault!"
   fi
@@ -53,7 +53,7 @@ function readVaultClipboard {
     return 1
   fi
 
-  if xclip -sel clip <<< ${stripResult}
+  if xclip -r -sel clip <<< "${stripResult}"
   then
     echo "OK - sent to clipboard"
     unset stripResult
