@@ -1,0 +1,5 @@
+#!/bin/bash
+
+function randomScreen {
+  screen -r $(screen -list | grep -Po '(?<=\t)[0-9]+' | shuf -n1)
+}
