@@ -1,0 +1,36 @@
+#!/bin/bash
+# Get the time one or more processes have been running (Searched via pgrep)
+# From 2014 scripts
+
+function procTimeRunning {
+  if [ -z "$1" ]
+  then
+    echo "Need proc name as argument for pgrep."
+    return 1
+  fi
+
+  procs=($(pgrep "${1}"))
+
+  if [ -z "$procs" ]
+  then
+    echo "No procs matched."
+    return 1
+  fi
+
+  nowEpoch=$(date +%s)
+
+  for proc in ${procs[@]}
+  do
+    if [ -f /proc/${proc}/exe ]
+    then
+      procMatchedName="\t($(basename $(readlink /proc/${proc}/exe)))"
+    fi
+
+    procStartTime=$(stat /proc/${proc} -c %x)
+    procStartTimeEpoch=$(date -d"${procStartTime}" +%s)
+    diffEpoch=$(((nowEpoch - procStartTimeEpoch)))
+
+    printf "%dh:%dm:%ds\t${proc}${procMatchedName}\n" $((diffEpoch/3600)) $((diffEpoch%3600/60)) $((diffEpoch%60))
+  done
+
+  }; alias procTime=procTimeRunning
