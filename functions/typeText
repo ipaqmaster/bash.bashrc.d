@@ -54,17 +54,28 @@ function typeText {
   # we must generate our own events per-cacter
   for (( i=0; i<${#text}; i++ ))
   do
+    useShiftL=0
     c="${text:$i:1}"
-
+    # Substitute characters with their xmacro definitions
     if [[ -v typeText_substitutions["$c"] ]]
     then
       c="${typeText_substitutions["$c"]}"
+
+    # Replace special characters with their un-shifted characters and include a Shift_L press to type them.
+    # For vSphere web console compatibility
+    elif [[ "$c" =~ [A-Z] ]]
+    then
+      c="${c,,}"
+      useShiftL=1
+    elif [[ -v typeText_mappings["$c"] ]]
+    then
+      c="${typeText_mappings[${c}]}"
+      useShiftL=1
     fi
 
-    if [[ -v typeText_mappings["$c"] ]]
+    if [ ${useShiftL} -eq 1 ]
     then
-      xmacro+=("KeyStrPress Shift_L" "keyStrPress ${typeText_mappings[${c}]}" "KeyStrRelease ${typeText_mappings[${c}]}" "KeyStrRelease Shift_L")
-
+      xmacro+=("KeyStrPress Shift_L" "keyStrPress ${c}" "KeyStrRelease ${c}" "KeyStrRelease Shift_L")
     else
       xmacro+=("keyStrPress ${c}" "KeyStrRelease ${c}")
     fi
