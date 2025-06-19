@@ -1,6 +1,8 @@
 #!/bin/bash
 
-declare -A typeText_mappings
+# Warning: These mappings may be incomplete!
+
+declare -A typeText_mappings # These need Shift_L pressed
 typeText_mappings['!']=1
 typeText_mappings['@']=2
 typeText_mappings['#']=3
@@ -11,6 +13,27 @@ typeText_mappings['&']=7
 typeText_mappings['*']=8
 typeText_mappings['(']=9
 typeText_mappings[')']=0
+typeText_mappings['|']=backslash
+typeText_mappings['"']=apostrophe
+typeText_mappings['{']=bracketleft
+typeText_mappings['}']=bracketright
+typeText_mappings['<']=comma
+typeText_mappings['>']=period
+typeText_mappings['+']=equal
+
+declare -A typeText_substitutions # These need substituting.
+typeText_substitutions[' ']=space
+typeText_substitutions['/']=slash
+typeText_substitutions[';']=semicolon
+typeText_substitutions['=']=equal
+typeText_substitutions['\']=backslash
+typeText_substitutions["'"]=apostrophe
+typeText_substitutions['[']=bracketleft
+typeText_substitutions[']']=bracketright
+typeText_substitutions[',']=comma
+typeText_substitutions['.']=period
+typeText_substitutions['-']=minus
+typeText_substitutions['=']=equal
 
 function typeText {
 
@@ -32,6 +55,12 @@ function typeText {
   for (( i=0; i<${#text}; i++ ))
   do
     c="${text:$i:1}"
+
+    if [[ -v typeText_substitutions["$c"] ]]
+    then
+      c="${typeText_substitutions["$c"]}"
+    fi
+
     if [[ -v typeText_mappings["$c"] ]]
     then
       xmacro+=("KeyStrPress Shift_L" "keyStrPress ${typeText_mappings[${c}]}" "KeyStrRelease ${typeText_mappings[${c}]}" "KeyStrRelease Shift_L")
