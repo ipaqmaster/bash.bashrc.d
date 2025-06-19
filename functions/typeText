@@ -1,13 +1,50 @@
 #!/bin/bash
+
+declare -A typeText_mappings
+typeText_mappings['!']=1
+typeText_mappings['@']=2
+typeText_mappings['#']=3
+typeText_mappings['$']=4
+typeText_mappings['%']=5
+typeText_mappings['^']=6
+typeText_mappings['&']=7
+typeText_mappings['*']=8
+typeText_mappings['(']=9
+typeText_mappings[')']=0
+
 function typeText {
+
   if [ -t 0 ] ; then
-    sleep 2
-    >&2 echo "Reading from args..."
-    xmacroplay <<< "String $@"
-  else
-    sleep 2
-    >&2 echo "Reading from pipe..."
-    input="$(cat)"
-    xmacroplay <<< "String ${input}"
+    mode=args
+    text="$@"
+  else 
+    mode=pipe
+    text="$(cat)"
   fi
+
+  >&2 echo "Reading from ${mode}..."
+  sleep 2 # Give time for the target window to be in focus
+
+  declare -a xmacro
+
+  # Because "String" (ctbl.h) isn't good enough for certain applications
+  # we must generate our own events per-cacter
+  for (( i=0; i<${#text}; i++ ))
+  do
+    c="${text:$i:1}"
+    if [[ -v typeText_mappings["$c"] ]]
+    then
+      xmacro+=("KeyStrPress Shift_L" "keyStrPress ${typeText_mappings[${c}]}" "KeyStrRelease ${typeText_mappings[${c}]}" "KeyStrRelease Shift_L")
+
+    else
+      xmacro+=("keyStrPress ${c}" "KeyStrRelease ${c}")
+    fi
+  done
+
+  xmacroNewlined=$(printf "%s\n" "${xmacro[@]}")
+
+
+  echo -e "Typing: ${text}"
+  echo "${xmacroNewlined}" | xmacroplay
+  return $?
 }
