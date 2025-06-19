@@ -19,6 +19,7 @@ typeText_mappings['{']=bracketleft
 typeText_mappings['}']=bracketright
 typeText_mappings['<']=comma
 typeText_mappings['>']=period
+typeText_mappings['_']=minus
 typeText_mappings['+']=equal
 
 declare -A typeText_substitutions # These need substituting.
