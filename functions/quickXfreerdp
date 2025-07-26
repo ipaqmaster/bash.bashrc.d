@@ -12,19 +12,21 @@ function quickXfreerdp {
     return 1
   fi
 
+  args=()
+
   while [ $# -gt 0 ]
   do
     case "$(tr '[:upper:]' '[:lower:]'<<<${1})" in
-      -domain)
-        xfreerdpDomain="/d:${2}"
+      -host)
+        args+=("/v:${2}")
         shift
       ;;
-      -host)
-        xfreerdpHost="/v:${2}"
+      -domain)
+        args+=("/d:${2}")
         shift
       ;;
       -user)
-        xfreerdpUser="/u:${2}"
+        args+=("/u:${2}")
         shift
       ;;
       --)
@@ -34,7 +36,7 @@ function quickXfreerdp {
       ;;
       *)
         echo "Unrecognised arg: ${2}"
-        echo "If intended for xfreerdp use -- beforehand."
+        echo "If intended for xfreerdp use -- to stop processing arguments."
         return 1
       ;;
     esac
@@ -45,6 +47,8 @@ function quickXfreerdp {
   done
 
 
-  xfreerdp ${xfreerdpHost} ${xfreerdpDomain} ${xfreerdpUser} /dynamic-resolution /clipboard /bpp:16 /network:lan /async-update /async-input /auto-reconnect /cert:tofu $@
-  unset xfreerdpDomain xfreerdpHost xfreerdpUser
+  args+=(/dynamic-resolution /clipboard /bpp:16 /network:lan /async-update /async-input /auto-reconnect /cert:tofu ${@})
+
+  xfreerdp "${args[@]}"
+
 }; alias xfreerdpQuick=quickXfreerdp
