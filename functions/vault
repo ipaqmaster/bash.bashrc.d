@@ -36,20 +36,20 @@ function readVaultClipboard {
 
   if [ ${vaultExitCode} -eq 0 ]
   then
-    echo -e "OK\t- Vault read"
+    echo -e "OK\t- Vault read" >&2
     stripResult=$(jq -jr "${jqPattern}" <<< "${vaultResult}")
   else
-    echo -e "ERR\t- reading vault!"
+    echo -e "ERR\t- reading vault!" >&2
   fi
 
   if [ -z "${DISPLAY}" ]
   then
-    echo -e "WARN\t- DISPLAY variable unset. Printing below:"
+    echo -e "WARN\t- DISPLAY variable unset. Printing below:" >&2
     printObscured "${stripResult}"
     return 1
   elif ! which xclip >/dev/null 2>&1
   then
-    echo -e "WARN\t- Can't find xclip in PATH. Printing below:"
+    echo -e "WARN\t- Can't find xclip in PATH. Printing below:" >&2
     printObscured "${stripResult}"
     return 1
   fi
