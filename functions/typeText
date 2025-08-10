@@ -35,6 +35,7 @@ typeText_substitutions[',']=comma
 typeText_substitutions['.']=period
 typeText_substitutions['-']=minus
 typeText_substitutions['=']=equal
+typeText_substitutions['\n']=Return
 
 function typeText {
 
@@ -52,11 +53,19 @@ function typeText {
   declare -a xmacro
 
   # Because "String" (ctbl.h) isn't good enough for certain applications
-  # we must generate our own events per-cacter
+  # we must generate our own events per-character
   for (( i=0; i<${#text}; i++ ))
   do
     useShiftL=0
     c="${text:$i:1}"
+
+    # If we're dealing with a newline, escape it out
+
+    if [[ "${c}" == $'\n' ]]
+    then
+      c='\n'
+    fi
+
     # Substitute characters with their xmacro definitions
     if [[ -v typeText_substitutions["$c"] ]]
     then
