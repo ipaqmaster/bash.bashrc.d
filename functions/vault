@@ -24,42 +24,43 @@ function printObscured {
 function readVaultClipboard {
   if [[ "$1" == *"totp"* ]]
   then
-    jqpattern='.data.code'
-    vaultargs='read'
+    jqPattern='.data.code'
+    vaultArgs='read'
   else
-    [ -z "$2" ] && { echo "Need a second argument for which Key to read of secret" ; return 1 ;}
-    jqpattern=".data.data.$2"
-    vaultargs='kv get'
+    [ -z "$2" ] && { echo "Need a second argument for which Key of the secret to print" >&2 ; return 1 ;}
+    jqPattern=".data.data.${2}"
+    vaultArgs='kv get'
   fi
-  vaultResult="$(vault $vaultargs -format json $1)"
+  vaultResult="$(vault ${vaultArgs} -format json ${1})"
   vaultExitCode=$?
 
-  if [ $vaultExitCode -eq 0 ]
+  if [ ${vaultExitCode} -eq 0 ]
   then
-    stripResult=$(jq -jr "$jqpattern" <<< "${vaultResult}")
+    echo -e "OK\t- Vault read"
+    stripResult=$(jq -jr "${jqPattern}" <<< "${vaultResult}")
   else
-    echo "ERR reading vault!"
+    echo -e "ERR\t- reading vault!"
   fi
 
-  if [ -z "$DISPLAY" ]
+  if [ -z "${DISPLAY}" ]
   then
-    echo "WARN - DISPLAY variable unset. Printing below:"
+    echo -e "WARN\t- DISPLAY variable unset. Printing below:"
     printObscured "${stripResult}"
     return 1
   elif ! which xclip >/dev/null 2>&1
   then
-    echo "WARN - Can't find xclip in PATH. Printing below:"
+    echo -e "WARN\t- Can't find xclip in PATH. Printing below:"
     printObscured "${stripResult}"
     return 1
   fi
 
   if xclip -r -sel clip <<< "${stripResult}"
   then
-    echo "OK - sent to clipboard" >&2
+    echo -e "OK\t- sent to clipboard" >&2
     unset stripResult
     return 0
   else
-    echo "ERR - Something went wrong trying to xclip the result. Printing below:" >&2
+    echo -e "ERR\t- Something went wrong trying to xclip the result. Printing below:" >&2
     printObscured ${stripResult}
     return 2
   fi
