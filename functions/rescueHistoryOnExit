@@ -3,7 +3,7 @@
 # A trap function designed to avoid bash history truncation often experienced during multi-shell activities
 function rescueHistoryOnExit {
   [ -z "$HISTFILE" ] && return
-  terminalHistLength=$(history |wc -l);
+  terminalHistLength=$(HISTTIMEFORMAT='' history |wc -l);
   diskHistLength=$(wc -l < "$HISTFILE");
   if [ $terminalHistLength -lt 1000 -a $diskHistLength -gt 1000 ]
   then
