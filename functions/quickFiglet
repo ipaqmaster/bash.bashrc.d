@@ -1,5 +1,5 @@
 #!/bin/bash
 
 function quickFiglet {
-  sed -e 's/^/#/g' -e 's/ \+$//g' <(figlet "$@")
+  sed -e 's/ \+$//g' -e '/^$/d' -e 's/^/# /g' <(figlet "$@")
 }; alias figletQuick=quickFiglet
