@@ -1,9 +1,22 @@
 #!/bin/bash
 
 # Make assumption of vault server if VAULT_ADDR is unset and domain is set.
-if [ -z "${VAULT_ADDR}" ] && [[ "$(hostnamectl hostname)" == *"."* ]]
+if [ -z "${VAULT_ADDR}" ]
 then
-  export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+  if [ -n "${HOSTNAME}" ] && [[ "${HOSTNAME}" == *"."* ]]
+  then
+    export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <<< "${HOSTNAME}")
+  else
+    hostnamectlHostname="$(hostnamectl hostname)"
+
+    if [[ "$(hostnamectl hostname 2>/dev/null)" == *"."* ]]
+    then
+      if [ -n "${HOSTNAME}" ] && [[ "${HOSTNAME}" == *"."* ]]
+      then
+        export VAULT_ADDR=https://vault.$(cut -f2- -d'.' <(hostnamectl hostname))
+      fi
+    fi
+  fi
 fi
 
 
