@@ -1,7 +1,52 @@
 #!/bin/bash
 function getCert {
-  [ -z "$1" ] && { >&2 echo -e "Usage: getCert host:port\n\tGets cert info of remote.\n\tLeave port (:) out to assume 443.\n\tAny additional arguments are given to the second openssl-x509 pipe such as -text"; return 1 ;}
-  host=$1
-  [[ $host != *":"* ]] && host+=:443
-  echo | timeout 1 openssl s_client -connect $host 2>/dev/null | openssl x509 -noout -dates -subject -issuer -ext subjectAltName,keyUsage,extendedKeyUsage ${@:2} 2>&1
+  declare -A starttlsPortmap
+    starttlsPortmap[21]=ftp
+    starttlsPortmap[25]=smtp
+   starttlsPortmap[143]=imap
+   starttlsPortmap[110]=pop3
+   starttlsPortmap[389]=ldap
+   starttlsPortmap[587]=smtp
+  starttlsPortmap[3306]=mysql
+  starttlsPortmap[5432]=postgres
+  #starttlsPortmap[]=smtp
+  if [ -z "${1}" ]
+  then
+     echo -e "Usage: getCert target:port" >&2
+     echo -e "\tGets cert info of remote." >&2
+     echo -e "\tLeave port (:) out to assume 443." >&2
+     echo -e "\tAny additional arguments are given to the second openssl-x509 pipe such as -text"
+     echo -e "\tSome ports will automatically have -starttls <type> appended to the arguments."
+     return 1
+  fi
+  target=${1}
+  if [[ $target != *":"* ]] 
+  then
+    echo "[Assuming port 443]" >&2
+    target+=:443
+
+  # Target included a port? Check if we need starttls.
+  else
+    port=${target/*:/}
+    IFS=\| # Treat them like a regex
+    if [[ ${port} =~ ^${!starttlsPortmap[*]}$ ]]
+    then
+      additionalArgs=(-starttls ${starttlsPortmap[${port}]})
+    fi
+    unset IFS
+  fi
+  if [ -n "${additionalArgs}" ]
+  then
+    echo "[Used: ${additionalArgs[*]}]" >&2
+  fi
+
+  clientResult="$(echo | timeout 1 openssl s_client "${additionalArgs[@]}" -connect "${target}")"
+    echo "" # Padding after the cert verification
+
+    if [ -n "${clientResult}" ]
+    then
+      openssl x509 \
+        -noout -dates -subject -issuer \
+        -ext subject,subjectAltName,keyUsage,extendedKeyUsage ${@:2} 2>&1 <<< "${clientResult}"
+    fi
 }
