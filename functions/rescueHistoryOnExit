@@ -4,7 +4,7 @@
 function rescueHistoryOnExit {
   [ -z "$HISTFILE" ] && return
   local terminalHistLength=$(HISTTIMEFORMAT='' history |wc -l);
-  local diskHistLength=$(wc -l "${HISTFILE}");
+  local diskHistLength=$(grep -vE '^#[0-9]{10}$' "${HISTFILE}" | wc -l);
   if [ ${terminalHistLength} -lt 1000 -a ${diskHistLength/ */} -gt 1000 ]
   then
     echo "This terminal's bash history is behind HISTFILE (${HISTFILE})(${terminalHistLength} of ${diskHistLength} total)";
