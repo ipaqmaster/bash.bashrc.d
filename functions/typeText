@@ -21,6 +21,8 @@ typeText_mappings['<']=comma
 typeText_mappings['>']=period
 typeText_mappings['_']=minus
 typeText_mappings['+']=equal
+typeText_mappings['?']=slash
+typeText_mappings[':']=semicolon
 
 declare -A typeText_substitutions # These need substituting.
 typeText_substitutions[' ']=space
