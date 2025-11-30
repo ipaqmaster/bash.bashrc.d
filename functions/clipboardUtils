@@ -25,3 +25,14 @@ function selectionToClipboard {
 
   xclip -sel clip <<< "${result}"
 }; alias xclipScreenshot=selectionToClipboard screenshotToClipboard=selectionToClipboard imageToClipboard=selectionToClipboardard=selectionToClipboard
+
+
+# Takes image data from the clipboard and outputs text to the terminal
+function clipboardToText {
+  xclip -selection clipboard -target image/png -out | tesseract - -
+}; alias selectionToText=clipboardToText
+
+# Same but puts the text back in the regular text clipboard for pasting
+function clipboardToTextClipboard {
+  clipboardToText | xclip -sel clip
+}; alias selectionToTextClipboard=clipboardToTextClipboard
