@@ -1,0 +1,78 @@
+#!/bin/bash
+
+function gitSubdirs {
+  function gitSubdirs_help {
+    echo "This function takes -dir xxx -gitcommand yyy to perform a git command on all matching subdir git repos." >&2
+    echo "e.g. gitSubdirs -dir Projects -gitCommand branch" >&2
+    return 1
+  }
+
+  if [ -z "${1}" ]
+  then
+    gitSubdirs_help
+    return 1
+  fi
+
+  while [ $# -gt 0 ]
+  do
+    case "$(tr '[:upper:]' '[:lower:]'<<<$1)" in
+      -command|--command|--git-command)
+        local gitCommand="$2"
+        shift
+      ;;
+      -dir|-directory|--dir|--directory)
+        local dir="$2"
+        shift
+      ;;
+      -force|--force)
+        local gitSubdirsForce=1
+      ;;
+      *)
+        echo "Unknown option $2" >&2
+        gitSubdirs_help
+        return 1
+      ;;
+    esac
+    shift
+  done
+
+
+  if [ -z "${gitCommand}" ] || [ -z "${dir}" ]
+  then
+    echo "Need -gitcommand and -dir to recursively act" >&2
+    return 1
+  fi
+
+  # Check if this is a dangerous command and refuse to do it without --force
+  if [[ ${gitCommand} =~ clean\ -(f|d|x)+|push\ -f|reset|filter-branch|rebase ]]
+  then
+    if [ -n "${gitSubdirsForce}" ]
+    then
+      echo "Forcing risky command..." >&2
+    else
+    echo "Git command seems dangerous. Use --force to continue" >&2
+    return 2
+    fi
+  fi
+
+  local found_repositories
+  readarray -d '' found_repositories < <(find "${dir}" -type d -name .git -printf "%h\0")
+  local found_repositories_count="${#found_repositories[*]}"
+
+  if [ ${found_repositories_count} -eq 0 ]
+  then
+    echo "Found no repositories to iterate." >&2
+  else
+    echo "Found $(((${found_repositories_count} + 1))) repositories." >&2
+
+    local repositoryIndex
+    for repositoryIndex in $(seq 0 ${#found_repositories[*]})
+    do
+      [ -z "${found_repositories[${repositoryIndex}]}" ] && continue # Ignore nothing
+      echo
+      echo "[gitSubdirs] [${found_repositories[${repositoryIndex}]}]" >&2
+      # setsid and cat on the end stop git from getting stuck on a prompt
+      (setsid git -C "${found_repositories[${repositoryIndex}]}" ${gitCommand}) </dev/null |& cat
+    done
+  fi
+}
