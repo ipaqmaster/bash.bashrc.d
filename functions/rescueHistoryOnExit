@@ -2,13 +2,22 @@
 
 # A trap function designed to avoid bash history truncation often experienced during multi-shell activities
 function rescueHistoryOnExit {
-  [ -z "$HISTFILE" ] && return
-  local terminalHistLength=$(HISTTIMEFORMAT='' history |wc -l);
-  local diskHistLength=$(grep -vE '^#[0-9]{10}$' "${HISTFILE}" | wc -l);
-  if [ ${terminalHistLength} -lt 1000 -a ${diskHistLength/ */} -gt 1000 ]
+  # Only run if histappend isn't enabled as histappend prevents history truncation.
+  if ! shopt -q histappend
   then
-    echo "This terminal's bash history is behind HISTFILE (${HISTFILE})(${terminalHistLength} of ${diskHistLength} total)";
-    echo "Doing a history -a then dev nulling this terminal's HISTFILE variable as it exits.";
-    history -a ; HISTFILE=/dev/null ; export HISTFILE=/dev/null;
-  fi;
+    [ -z "$HISTFILE" ] && return
+    local terminalHistLength=$(HISTTIMEFORMAT='' history |wc -l);
+    local diskHistLength=$(grep -vE '^#[0-9]{10}$' "${HISTFILE}" | wc -l);
+    if [ ${terminalHistLength} -lt 1000 -a ${diskHistLength/ */} -gt 1000 ]
+    then
+      # Don't echo about it if history length is 0
+      # (Keep quiet when bash used in a %! command by vim with 'set shellcmdflag=-ic')
+      if [ ${terminalHistLength} -gt 0 ]
+      then
+        echo "Shell history behind HISTFILE (${terminalHistLength} of ${diskHistLength} in ${HISTFILE})" >&2
+        echo "Appending to HISTFILE and unsetting in this terminal to avoid truncation" >&2
+      fi
+      history -a ; HISTFILE=/dev/null ; export HISTFILE=/dev/null;
+    fi;
+  fi
 }; trap rescueHistoryOnExit EXIT HUP TERM
