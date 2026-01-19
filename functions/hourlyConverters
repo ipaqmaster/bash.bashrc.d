@@ -1,3 +1,28 @@
 #!/bin/bash
-function Hourly_to_Yearly  { echo $1*24*365 | bc ;}
-function Hourly_to_Monthly { echo $1*24*30  | bc ;}
+
+# This makes some assumptions
+function hourly_to_yearly {
+
+  if [ -z "${1}" ]
+  then
+    echo "${FUNCNAME} hourly_rate hours_daily(7) days_weekly(5) yearly_weeks_worked(52)"
+    return 1
+  fi
+
+  local hourly_rate=${1}
+  local hours_daily=${2:-7}
+  local days_weekly=${3:-5}
+  local yearly_weeks_worked=${4:-52}
+  local annual_salary
+
+  echo $(((${hourly_rate}*${hours_daily}*${days_weekly}*${yearly_weeks_worked})))
+
+}
+function hourly_to_monthly {
+  if [ -z "${1}" ]
+  then
+    echo "${FUNCNAME} hourly_rate hours_daily(7) days_weekly(5)"
+    return 1
+  fi
+  hourly_to_yearly ${1} '' '' 4
+}
