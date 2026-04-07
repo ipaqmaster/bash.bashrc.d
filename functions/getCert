@@ -29,7 +29,7 @@ function getCert {
   else
     port=${target/*:/}
     IFS=\| # Treat them like a regex
-    if [[ ${port} =~ ^${!starttlsPortmap[*]}$ ]]
+    if [[ ${port} =~ ^(${!starttlsPortmap[*]})$ ]]
     then
       additionalArgs=(-starttls ${starttlsPortmap[${port}]})
     fi
